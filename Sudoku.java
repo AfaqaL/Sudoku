@@ -1,3 +1,4 @@
+import java.lang.reflect.Array;
 import java.util.*;
 
 /*
@@ -123,28 +124,107 @@ public class Sudoku {
 	// You can edit to do easier cases, but turn in
 	// solving hardGrid.
 	public static void main(String[] args) {
+
 		Sudoku sudoku;
 		sudoku = new Sudoku(hardGrid);
-		
-		System.out.println(sudoku); // print the raw problem
-		int count = sudoku.solve();
-		System.out.println("solutions:" + count);
-		System.out.println("elapsed:" + sudoku.getElapsed() + "ms");
-		System.out.println(sudoku.getSolutionText());
+		sudoku.test();
+//		System.out.println(sudoku); // print the raw problem
+//		int count = sudoku.solve();
+//		System.out.println("solutions:" + count);
+//		System.out.println("elapsed:" + sudoku.getElapsed() + "ms");
+//		System.out.println(sudoku.getSolutionText());
 	}
-	
-	
-	
+
+	public void test(){
+		ArrayList<spot> arr = new ArrayList<>(10);
+		for (int i = 1; i < 11; i++) {
+			spot c = new spot(0,0);
+			c.density = 13 % i;
+			arr.add(c);
+		}
+		arr.sort(Comparator.comparingInt(src -> -src.density));
+
+		System.out.println(arr.toString());
+	}
+
 
 	/**
 	 * Sets up based on the given ints.
 	 */
+	private int[][] grid;
+	ArrayList<spot> ls;
+	private static final Integer[] possibleVals = new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9};
+
 	public Sudoku(int[][] ints) {
-		// YOUR CODE HERE
+		grid = new int[ints.length][ints[0].length];
+		for (int i = 0; i < ints.length; i++) {
+			System.arraycopy(ints[i], 0, grid[i],0, ints[i].length);
+		}
+		ls = getDenseSpots();
 	}
-	
-	
-	
+
+	private ArrayList<spot> getDenseSpots() {
+		ArrayList<spot> currls = new ArrayList<>(50);
+		for (int i = 0; i < grid.length; i++) {
+			for (int j = 0; j < grid[0].length; j++) {
+				if(grid[i][j] == 0){
+					currls.add(new spot(i, j));
+				}
+			}
+		}
+
+		currls.sort(Comparator.comparingInt(src -> -src.density));
+		return currls;
+	}
+
+	public class spot{
+		private int row, col;
+		private int density;
+		private HashSet<Integer> hs;
+
+		public spot(int row, int col){
+			this.row = row;
+			this.col = col;
+			hs = new HashSet<>(Arrays.asList(possibleVals));
+			//setDensity();
+		}
+
+		public void set(int val){
+			grid[row][col] = val;
+		}
+
+		@Override
+		public String toString(){ return String.valueOf(density); }
+
+		public int getDensity(){
+			return density;
+		}
+		public final HashSet<Integer> possVals(){
+			return hs;
+		}
+
+		public void clear(){
+			grid[row][col] = 0;
+		}
+
+		public void setDensity(){
+			for (int i = 0; i < SIZE; i++) {
+				hs.remove(grid[row][i]);
+			}
+			for (int i = 0; i < SIZE; i++) {
+				hs.remove(grid[i][col]);
+			}
+			int x = row/3 * 3;
+			int y = col/3 * 3;
+			for (int i = 0; i < PART; i++) {
+				for (int j = 0; j < PART; j++) {
+					hs.remove(grid[x + i][y + j]);
+				}
+			}
+			density = hs.size();
+		}
+	}
+
 	/**
 	 * Solves the puzzle, invoking the underlying recursive search.
 	 */
