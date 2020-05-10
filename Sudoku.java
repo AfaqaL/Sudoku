@@ -127,57 +127,44 @@ public class Sudoku {
 
 		Sudoku sudoku;
 		sudoku = new Sudoku(hardGrid);
-		sudoku.test();
-//		System.out.println(sudoku); // print the raw problem
-//		int count = sudoku.solve();
-//		System.out.println("solutions:" + count);
-//		System.out.println("elapsed:" + sudoku.getElapsed() + "ms");
-//		System.out.println(sudoku.getSolutionText());
+
+		System.out.println(sudoku); // print the raw problem
+		int count = sudoku.solve();
+		System.out.println("solutions:" + count);
+		System.out.println("elapsed:" + sudoku.getElapsed() + "ms");
+		System.out.println(sudoku.getSolutionText());
 	}
 
-	public void test(){
-		ArrayList<spot> arr = new ArrayList<>(10);
-		for (int i = 1; i < 11; i++) {
-			spot c = new spot(0,0);
-			c.density = 13 % i;
-			arr.add(c);
-		}
-		arr.sort(Comparator.comparingInt(src -> -src.density));
 
-		System.out.println(arr.toString());
-	}
+	private int[][] grid;
+	ArrayList<spot> ls;
+	private static final Integer[] possibleVals = new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9};
 
 
 	/**
 	 * Sets up based on the given ints.
 	 */
-	private int[][] grid;
-	ArrayList<spot> ls;
-	private static final Integer[] possibleVals = new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9};
-
 	public Sudoku(int[][] ints) {
 		grid = new int[ints.length][ints[0].length];
 		for (int i = 0; i < ints.length; i++) {
 			System.arraycopy(ints[i], 0, grid[i],0, ints[i].length);
 		}
-		ls = getDenseSpots();
+		ls = new ArrayList<>(50);
+		getDenseSpots();
 	}
 
-	private ArrayList<spot> getDenseSpots() {
-		ArrayList<spot> currls = new ArrayList<>(50);
+	private void getDenseSpots() {
 		for (int i = 0; i < grid.length; i++) {
 			for (int j = 0; j < grid[0].length; j++) {
 				if(grid[i][j] == 0){
-					currls.add(new spot(i, j));
+					ls.add(new spot(i, j));
 				}
 			}
 		}
-
-		currls.sort(Comparator.comparingInt(src -> -src.density));
-		return currls;
+		Collections.sort(ls);
 	}
 
-	public class spot{
+	public class spot implements Comparable<spot> {
 		private int row, col;
 		private int density;
 		private HashSet<Integer> hs;
@@ -185,37 +172,37 @@ public class Sudoku {
 		public spot(int row, int col){
 			this.row = row;
 			this.col = col;
-			hs = new HashSet<>(Arrays.asList(possibleVals));
-			//setDensity();
+			hs = new HashSet<>(/*Arrays.asList(possibleVals)*/);
+			setDensity();
 		}
 
 		public void set(int val){
 			grid[row][col] = val;
 		}
 
-		@Override
-		public String toString(){ return String.valueOf(density); }
+	//	@Override
+	//	public String toString(){ return String.valueOf(density); }
 
-		public int getDensity(){
-			return density;
-		}
-		public final HashSet<Integer> possVals(){
-			return hs;
-		}
+	//	public int getDensity(){
+	//		return density;
+	//	}
+	//	public final HashSet<Integer> possVals(){
+	//		return hs;
+	//	}
 
 		public void clear(){
 			grid[row][col] = 0;
 		}
 
 		public void setDensity(){
+			hs.addAll(Arrays.asList(possibleVals));
 			for (int i = 0; i < SIZE; i++) {
 				hs.remove(grid[row][i]);
-			}
-			for (int i = 0; i < SIZE; i++) {
 				hs.remove(grid[i][col]);
 			}
-			int x = row/3 * 3;
-			int y = col/3 * 3;
+
+			int x = (row/3) * 3;
+			int y = (col/3) * 3;
 			for (int i = 0; i < PART; i++) {
 				for (int j = 0; j < PART; j++) {
 					hs.remove(grid[x + i][y + j]);
@@ -223,21 +210,82 @@ public class Sudoku {
 			}
 			density = hs.size();
 		}
+
+		@Override
+		public int compareTo(spot o) {
+			return this.density - o.density;
+		}
 	}
+
+	/**
+	 * Containers for solving the puzzle.
+	 */
+
+	private class SolStruct{
+		public int val;
+		public String firstSol;
+		public long solTime;
+		public SolStruct(){
+			val = 0;
+			firstSol = "";
+			solTime = 0;
+		}
+	}
+
+	private SolStruct numSols;
 
 	/**
 	 * Solves the puzzle, invoking the underlying recursive search.
 	 */
 	public int solve() {
-		return 0; // YOUR CODE HERE
+		numSols = new SolStruct();
+
+		long start = System.currentTimeMillis();
+		solveHelper(0);
+		long end = System.currentTimeMillis();
+
+		numSols.solTime = end - start;
+		return numSols.val;
 	}
-	
+
+	private void solveHelper(int filled) {
+		if(filled >= ls.size()){
+			if(++numSols.val == 1) {
+				numSols.firstSol = toString();
+			}
+			return;
+		}
+
+		spot curr = ls.get(filled);
+		curr.setDensity();
+		for(int i : curr.hs){
+			curr.set(i);
+
+			solveHelper(filled + 1);
+
+			curr.clear();
+
+			if(numSols.val >= 100) return;
+		}
+	}
+
 	public String getSolutionText() {
-		return ""; // YOUR CODE HERE
+		return numSols.firstSol;
 	}
 	
 	public long getElapsed() {
-		return 0; // YOUR CODE HERE
+		return numSols.solTime;
 	}
 
+	@Override
+	public String toString() {
+		String gridStr = "";
+		for (int i = 0; i < SIZE; i++) {
+			for (int j = 0; j < SIZE; j++) {
+				gridStr += grid[i][j] + " ";
+			}
+			gridStr += "\n";
+		}
+		return gridStr;
+	}
 }
