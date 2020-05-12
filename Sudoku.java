@@ -1,3 +1,4 @@
+package hw3;
 import java.lang.reflect.Array;
 import java.util.*;
 
@@ -21,7 +22,7 @@ public class Sudoku {
 	"8 0 9 0 4 0 2 0 0",
 	"0 7 3 5 0 9 0 0 1",
 	"4 0 0 0 0 0 6 7 9");
-	
+
 	
 	// Provided medium 5 3 grid
 	public static final int[][] mediumGrid = Sudoku.stringsToGrid(
@@ -80,7 +81,7 @@ public class Sudoku {
 	 * @param text string of 81 numbers
 	 * @return grid
 	 */
-	public static int[][] textToGrid(String text) {
+	public static int[][] textToGrid(String text) throws RuntimeException{
 		int[] nums = stringToInts(text);
 		if (nums.length != SIZE*SIZE) {
 			throw new RuntimeException("Needed 81 numbers, but got:" + nums.length);
