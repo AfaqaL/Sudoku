@@ -9,11 +9,11 @@ public class Main {
             Class.forName("com.mysql.cj.jdbc.Driver");
             Connection con = DriverManager.getConnection(
                     "jdbc:mysql://localhost",
-                    "root",
-                    "Afaqinio_123"
+                    "Enter your user",
+                    "Enter your password"
             );
             Statement stm = con.createStatement();
-            stm.execute("USE metropolisschema");
+            stm.execute("USE Your Database");
             MPModel model = new MPModel(con);
             MPView view = new MPView();
             MPController controller = new MPController(model, view);

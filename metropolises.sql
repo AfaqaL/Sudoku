@@ -1,4 +1,4 @@
-USE metropolisschema;
+USE Your_Database;
   -- >>>>>>>>>>>> change this line so it uses your database, not mine <<<<<<<<<<<<<<<
   
 DROP TABLE IF EXISTS metropolises;
